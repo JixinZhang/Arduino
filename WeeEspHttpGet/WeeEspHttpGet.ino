@@ -1,17 +1,17 @@
 /*  To use SoftwareSerial, mySerial will be used if you create an object (named wifi) of class ESP8266 in your code like this:
- *  #include "ESP8266.h"
- *  #include <SoftwareSerial.h>
+    #include "ESP8266.h"
+    #include <SoftwareSerial.h>
 
- *  SoftwareSerial mySerial(3, 2);  RX:D3, TX:D2 
- *  ESP8266 wifi(mySerial);
- *
- *  The connection should be like these:
- *  ESP8266_TX->RX(D3)
- *  ESP8266_RX->TX(D2)
- *  ESP8266_CH_PD->3.3V
- *  ESP8266_VCC->3.3V
- *  ESP8266_GND->GND
- */
+    SoftwareSerial mySerial(3, 2);  RX:D3, TX:D2
+    ESP8266 wifi(mySerial);
+
+    The connection should be like these:
+    ESP8266_TX->RX(D3)
+    ESP8266_RX->TX(D2)
+    ESP8266_CH_PD->3.3V
+    ESP8266_VCC->3.3V
+    ESP8266_GND->GND
+*/
 
 // http://api.yeelink.net/v1.0/device/345323/sensor/384355/datapoint
 
@@ -25,6 +25,8 @@
 
 SoftwareSerial mySerial(3, 2);
 ESP8266 wifi(mySerial);
+
+char response[50] = "{";
 
 void setup(void) {
   Serial.begin(9600);
@@ -55,6 +57,7 @@ void setup(void) {
   }
 
   Serial.print("setup end\r\n");
+    Serial.println(response);
 }
 
 void loop(void) {
@@ -77,9 +80,11 @@ void loop(void) {
   if (len > 0) {
     Serial.print("Received:[");
     for (uint32_t i = 0; i < len; i++) {
+      response[i] = (char)buffer[i];
       Serial.print((char)buffer[i]);
     }
     Serial.print("]\r\n");
+    Serial.println(response);
   }
 
   if (wifi.releaseTCP()) {
@@ -90,4 +95,25 @@ void loop(void) {
 
   while (1);
 
+}
+
+int getData() {
+  int status = 0;
+  for (uint32_t index = 0; index < 50; index++) {
+    if (response[index] == 'v' &&
+        response[index + 1] == 'a' &&
+        response[index + 2] == 'l')
+    {
+      if (response[index + 7] == '1')
+      {
+        status = 1;
+      } else if (response[index + 7] == '0') {
+        status = 0;
+      } else {
+        status = -1;
+      }
+      break;
+    }
+  }
+  return status;
 }
